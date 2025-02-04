@@ -6,7 +6,7 @@ the Google Cloud Platform resource hierarchy.
 ## ls folders
 To  recursive list all folders in your organizations, type:
 ```
-$ gcp-path --ls
+$ gcp-path ls
 //xebia.com/sl
 //xebia.com/sl/cloud
 //xebia.com/sl/cloud/playgrounds
