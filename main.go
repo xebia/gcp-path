@@ -9,8 +9,12 @@ import (
 	"github.com/xebia/gcp-path/internal"
 )
 
+var loadViaCloudAsset bool
+
 func main() {
 	root := &cobra.Command{Use: "gcp-path"}
+	root.PersistentFlags().BoolVarP(&loadViaCloudAsset, "use-asset-api", "u", false, "use Cloud Asset API to load folders")
+
 	ls := &cobra.Command{
 		Use:          "ls [organization name]....",
 		Short:        "List resources",
@@ -18,7 +22,7 @@ func main() {
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.Background()
-			hierarchy, err := internal.LoadResourceHierarchy(ctx, args)
+			hierarchy, err := internal.LoadResourceHierarchy(ctx, args, !loadViaCloudAsset)
 			if err != nil {
 				return err
 			}
@@ -32,7 +36,7 @@ func main() {
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.Background()
-			hierarchy, err := internal.LoadResourceHierarchy(ctx, nil)
+			hierarchy, err := internal.LoadResourceHierarchy(ctx, nil, !loadViaCloudAsset)
 			if err != nil {
 				return err
 			}
@@ -65,7 +69,7 @@ func main() {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.Background()
 
-			hierarchy, err := internal.LoadResourceHierarchy(ctx, nil)
+			hierarchy, err := internal.LoadResourceHierarchy(ctx, nil, !loadViaCloudAsset)
 			if err != nil {
 				return err
 			}

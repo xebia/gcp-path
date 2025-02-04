@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
+
 	"github.com/binxio/gcloudconfig"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
-	"net/url"
-	"strings"
 
 	asset "cloud.google.com/go/asset/apiv1"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
@@ -18,7 +19,7 @@ type ResourceHierarchy struct {
 	Organizations []*OrganizationNode
 }
 
-func LoadResourceHierarchy(ctx context.Context, displayNames []string) (*ResourceHierarchy, error) {
+func LoadResourceHierarchy(ctx context.Context, displayNames []string, viaResourceManager bool) (*ResourceHierarchy, error) {
 	var err error
 
 	var credentials *google.Credentials
@@ -36,6 +37,11 @@ func LoadResourceHierarchy(ctx context.Context, displayNames []string) (*Resourc
 		return nil, err
 	}
 
+	foldersClient, err := resourcemanager.NewFoldersClient(ctx, option.WithCredentials(credentials))
+	if err != nil {
+		return nil, err
+	}
+
 	assetClient, err := asset.NewClient(ctx, option.WithCredentials(credentials))
 	if err != nil {
 		return nil, err
@@ -47,8 +53,14 @@ func LoadResourceHierarchy(ctx context.Context, displayNames []string) (*Resourc
 	}
 
 	for _, organization := range organizations {
-		if err := organization.LoadFolders(ctx, assetClient); err != nil {
-			return nil, err
+		if viaResourceManager {
+			if err := organization.LoadFolderViaResourceManager(ctx, foldersClient, nil); err != nil {
+				return nil, err
+			}
+		} else {
+			if err := organization.LoadFoldersViaCloudAsset(ctx, assetClient); err != nil {
+				return nil, err
+			}
 		}
 	}
 	return &ResourceHierarchy{Organizations: organizations}, nil

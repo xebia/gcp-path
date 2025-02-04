@@ -6,7 +6,7 @@ the Google Cloud Platform resource hierarchy.
 ## ls folders
 To  recursive list all folders in your organizations, type:
 ```
-$ gcp-path ls
+$ gcp-path --ls
 //xebia.com/sl
 //xebia.com/sl/cloud
 //xebia.com/sl/cloud/playgrounds
@@ -23,17 +23,17 @@ The paths will be proper URL paths, so the names may contain slashes and spaces.
 to get the resource name of a path, type:
 
 ```
-$ gcloud get-resource-name //xebia.com
+$ gcp-path get-resource-name //xebia.com
 organizations/2342342342334
 
-$ gcloud get-resource-name --id //xebia.com/sl/cloud/playgrounds
+$ gcp-path get-resource-name //xebia.com/sl/cloud/playgrounds
 folders/134234534556
 ```
 The name must be a proper path.
 Some gcloud commands do not accept the name, but only the id. In that case, add the flag --id:
 
 ```shell
-$ gcloud get-resource-name --id //xebia.com
+$ gcp-path get-resource-name --id //xebia.com
 2342342342334
 ```
 
@@ -62,6 +62,4 @@ go install github.com/xebia/gcp-path
 ```
 
 # CAVEATS
-
-- The utility uses the cloud asset search API to find all folders and organizations you have
-  access to. The resource manager API is very slow recursing down the folders.
+- The Google cloud resource manager folders API is dog slow listing folders.

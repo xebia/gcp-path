@@ -38,8 +38,8 @@ func ListOrganizations(ctx context.Context, client *resourcemanager.Organization
 	it := client.SearchOrganizations(ctx, request)
 	for organization, err = it.Next(); err == nil; organization, err = it.Next() {
 		if displayNames == nil || len(displayNames) == 0 || slices.Contains(displayNames, organization.DisplayName) {
+			organizations = append(organizations, &OrganizationNode{Organization: organization, Folders: make(map[string]*Folder)})
 		}
-		organizations = append(organizations, &OrganizationNode{Organization: organization, Folders: nil})
 	}
 	if errors.Is(err, iterator.Done) {
 		return organizations, nil
@@ -82,7 +82,7 @@ func (o *OrganizationNode) MarshalFolderFromStruct(s *structpb.Struct) (*Folder,
 	return &result, nil
 }
 
-func (o *OrganizationNode) LoadFolders(ctx context.Context, client *asset.Client) error {
+func (o *OrganizationNode) LoadFoldersViaCloudAsset(ctx context.Context, client *asset.Client) error {
 	var err error
 	var response *assetpb.QueryAssetsResponse
 	response, err = client.QueryAssets(ctx, &assetpb.QueryAssetsRequest{
@@ -119,6 +119,34 @@ func (o *OrganizationNode) LoadFolders(ctx context.Context, client *asset.Client
 			}
 			o.Folders[folder.Name] = folder
 		}
+	}
+	return nil
+}
+
+func (o *OrganizationNode) LoadFolderViaResourceManager(ctx context.Context, client *resourcemanager.FoldersClient, ancestors []string) error {
+	var err error
+
+	if ancestors == nil {
+		ancestors = []string{o.Organization.Name}
+	}
+
+	it := client.ListFolders(ctx, &resourcemanagerpb.ListFoldersRequest{Parent: ancestors[0]})
+	f, err := it.Next()
+	for ; err == nil; f, err = it.Next() {
+		newAncestors := make([]string, 0, len(ancestors)+1)
+		newAncestors = append(newAncestors, f.Name)
+		newAncestors = append(newAncestors, ancestors...)
+
+		o.Folders[f.Name] = &Folder{
+			Name:         f.Name,
+			DisplayName:  f.DisplayName,
+			Ancestors:    newAncestors,
+			organization: o,
+		}
+		o.LoadFolderViaResourceManager(ctx, client, newAncestors)
+	}
+	if !errors.Is(err, iterator.Done) {
+		return err
 	}
 	return nil
 }
