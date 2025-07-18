@@ -1,13 +1,13 @@
 module github.com/xebia/gcp-path
 
-go 1.23
+go 1.23.0
 
 require (
 	cloud.google.com/go/asset v1.20.4
 	cloud.google.com/go/resourcemanager v1.10.3
 	github.com/binxio/gcloudconfig v0.1.5
 	github.com/spf13/cobra v1.8.1
-	golang.org/x/oauth2 v0.24.0
+	golang.org/x/oauth2 v0.27.0
 	google.golang.org/api v0.214.0
 	google.golang.org/protobuf v1.35.2
 )
